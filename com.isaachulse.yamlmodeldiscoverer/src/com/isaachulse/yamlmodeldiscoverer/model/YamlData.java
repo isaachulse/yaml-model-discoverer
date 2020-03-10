@@ -1,4 +1,4 @@
-package com.isaachulse.yamlmodeldiscoverer;
+package com.isaachulse.yamlmodeldiscoverer.model;
 
 import com.google.gson.JsonElement;
 
@@ -16,5 +16,5 @@ class YamlData {
 	public JsonElement getData() {
 		return data;
 	}
-	
+
 }

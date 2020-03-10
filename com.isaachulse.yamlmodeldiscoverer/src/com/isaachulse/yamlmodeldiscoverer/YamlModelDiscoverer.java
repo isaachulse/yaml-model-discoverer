@@ -4,7 +4,6 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
@@ -85,20 +84,11 @@ class YamlModelDiscoverer {
 		}
 		return eClass;
 	}
-
-	/**
-	 * Refines the attributes and references of an existing {@link EClass} from a
-	 * new {@link JsonObject} definition.
-	 *
-	 * @param eClass     The existing {@link EClass}
-	 * @param jsonObject The {@link JsonObject} to use as input to refine
-	 * @return The refined class (as {@link EClass})
-	 */
+	
+	// Refines EAttributes and EReferences of existing eclass
 	private EClass refineMetaclass(EClass eClass, JsonObject jsonObject) {
-		if (eClass == null)
-			throw new IllegalArgumentException("eClass cannot be null");
-		if (jsonObject == null)
-			throw new IllegalArgumentException("jsonObject cannot be null");
+		if (eClass == null || jsonObject == null)
+			throw new IllegalArgumentException("Argument(s) can't be null");
 
 		Iterator<Map.Entry<String, JsonElement>> pairs = jsonObject.entrySet().iterator();
 		while (pairs.hasNext()) {
@@ -123,14 +113,7 @@ class YamlModelDiscoverer {
 		return eClass;
 	}
 
-	/**
-	 * Creates a new {@link EStructuralFeature} out from a pairId/Value
-	 *
-	 * @param pairId     Identifier of the feature
-	 * @param value      {@link JsonElement} including the value
-	 * @param lowerBound The lover bound for the structural feature
-	 * @param eClass     {@link EClass} containing the feature
-	 */
+	// Creates a new EStructuralFeature
 	private void createStructuralFeature(String pairId, JsonElement value, int lowerBound, EClass eClass) {
 		if (pairId == null || value == null || eClass == null)
 			throw new IllegalArgumentException("Argument(s) can't be null");
@@ -191,8 +174,9 @@ class YamlModelDiscoverer {
 	// Generates String type identifier
 	private String digestId(String id) {
 		if (id == null)
-			throw new IllegalArgumentException("id cannot be null");
+			throw new IllegalArgumentException("Argument(s) can't be null");
 
+		// Look out for this, might want to change later
 		String result = id;
 		if (result.length() > 1 && result.endsWith("s"))
 			result = result.substring(0, result.length() - 1);
