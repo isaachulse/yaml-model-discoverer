@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: YamlModelDiscoverer
+Bundle-SymbolicName: com.isaachulse.yamlmodeldiscoverer
+Bundle-Version: 1.0.0.qualifier
+Automatic-Module-Name: com.isaachulse.yamlmodeldiscoverer
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Require-Bundle: org.eclipse.emf.ecore,
+ org.eclipse.emf.ecore.xmi,
+ com.google.gson
