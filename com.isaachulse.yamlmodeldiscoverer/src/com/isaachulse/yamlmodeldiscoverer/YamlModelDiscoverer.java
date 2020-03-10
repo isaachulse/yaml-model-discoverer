@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -17,7 +18,6 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
-import org.yaml.snakeyaml.Yaml;
 
 import com.isaachulse.yamlmodeldiscoverer.model.YamlArray;
 import com.isaachulse.yamlmodeldiscoverer.model.YamlElement;
@@ -28,14 +28,14 @@ import com.isaachulse.yamlmodeldiscoverer.model.YamlPrimitive;
 class YamlModelDiscoverer {
 
 	private static final String DEFAULT_NS_PREFIX = "PREFIX";
-	private static final String DEFAULT_NS_URI = "http://DEFAULT_NS_URI/";
+	private static final String DEFAULT_NS_URI = "http://yamlmodeldiscover/";
 	private HashMap<String, EClass> eClasses = new HashMap<String, EClass>();
 
 	public YamlModelDiscoverer() {
 		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put("ecore", new EcoreResourceFactoryImpl());
 	}
 
-	private EPackage discover(DocumentSource source) {
+	EPackage discover(DocumentSource source) {
 		if (source == null)
 			throw new IllegalArgumentException("Source can't be null");
 
@@ -43,8 +43,8 @@ class YamlModelDiscoverer {
 
 		EPackage ePackage = EcoreFactory.eINSTANCE.createEPackage();
 		ePackage.setName(source.getName());
-		ePackage.setNsURI(DEFAULT_NS_URI + source.getName());
-		ePackage.setNsPrefix(DEFAULT_NS_PREFIX + source.getName().charAt(0));
+		ePackage.setNsURI(DEFAULT_NS_URI + source.getName().toLowerCase());
+		ePackage.setNsPrefix(DEFAULT_NS_PREFIX);
 		ePackage.getEClassifiers().addAll(getEClasses().values());
 		source.setMetamodel(ePackage);
 
@@ -53,7 +53,7 @@ class YamlModelDiscoverer {
 
 	private EClass discoverMetaclass(String id, YamlObject yamlObject) {
 		if (id == null || yamlObject == null)
-			throw new IllegalArgumentException("ID or Data can't be null");
+			throw new IllegalArgumentException("Argument(s) can't be null");
 
 		EClass eClass = eClasses.get(id);
 		if (eClass != null) {
@@ -65,10 +65,8 @@ class YamlModelDiscoverer {
 	}
 
 	private EClass createMetaclass(String id, YamlObject yamlObject) {
-		if (id == null)
-			throw new IllegalArgumentException("ID can't be null");
-		if (yamlObject == null)
-			throw new IllegalArgumentException("Data object can't be null");
+		if (id == null || yamlObject == null)
+			throw new IllegalArgumentException("Argument(s) can't be null");
 
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		eClass.setName(id);
@@ -190,7 +188,7 @@ class YamlModelDiscoverer {
 	}
 
 	// Maps YAML elements to values
-	private static YamlElement wrapYamlObject(Object o) {
+	static YamlElement wrapYamlObject(Object o) {
 
 		// NULL transformed to YamlNull
 		if (o == null)
@@ -241,42 +239,5 @@ class YamlModelDiscoverer {
 
 		// Default to String if we can't find anything else
 		return new YamlPrimitive(String.valueOf(o));
-	}
-
-	// Main method to test
-	public static void main(String[] args) {
-
-		String yamlCode = "\n" + "invoice: 34843\n" + "date   : 2001-01-23\n" + "bill-to: &id001\n"
-				+ "    given  : Chris\n" + "    family : Dumars\n" + "    addresss : \n" + "        lines: |\n"
-				+ "            458 Walkman Dr.\n" + "            Suite #292\n" + "        city    : Royal Oak\n"
-				+ "        state   : MI\n" + "        postal  : 48046\n" + "ship-to: *id001\n" + "product:\n"
-				+ "    - sku         : BL394D\n" + "      quantity    : 4\n" + "      description : Basketball\n"
-				+ "      price       : 450.00\n" + "    - sku         : BL4438H\n" + "      quantity    : 1\n"
-				+ "      description : Super Hoop\n" + "      price       : 2392.00\n" + "tax  : 251.42\n"
-				+ "total: 4443.52\n" + "comments: >\n" + "    Late afternoon is best.\n"
-				+ "    Backup contact is Nancy\n" + "    Billsmer @ 338-4338.";
-
-		Yaml yaml = new Yaml();
-		Map<String, Object> yamlMap = yaml.load(yamlCode);
-		YamlElement yamlElem = wrapYamlObject(yamlMap);
-
-		YamlModelDiscoverer discoverer = new YamlModelDiscoverer();
-
-		DocumentSource source = new DocumentSource("Discovered");
-
-		source.setYamlData(yamlElem);
-		EPackage discoveredModel = discoverer.discover(source);
-
-		EList<EClassifier> model = discoveredModel.getEClassifiers();
-
-		EClass first = (EClass) model.get(0);
-
-		System.out.println("EPackage is: " + discoveredModel);
-		System.out.println();
-
-		System.out.println("2nd Eclass is: " + model.get(1));
-		System.out.println();
-
-		System.out.println("Some structural features are: " + first.getEStructuralFeatures());
 	}
 }

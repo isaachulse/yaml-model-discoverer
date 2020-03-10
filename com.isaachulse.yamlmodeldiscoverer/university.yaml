@@ -1,0 +1,9 @@
+University:
+    -
+        students:
+            - {Student: {firstName: Alice, lastName: Bobson}}
+            - {Student: {firstName: Bob, lastName: Alison}}
+    -
+        modules:
+            - {Module: {name: MODE, credits: 10}}
+            - {Module: {name: PRBX, credits: 40}}
