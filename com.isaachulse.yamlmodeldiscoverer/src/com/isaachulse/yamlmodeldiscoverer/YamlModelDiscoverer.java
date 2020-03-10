@@ -36,18 +36,11 @@ class YamlModelDiscoverer {
 	}
 
 	private EPackage discover(DocumentSource source) {
-		if (source == null || source.getJsonData().size() == 0)
+		if (source == null)
 			throw new IllegalArgumentException("Source can't be null");
 
-		List<JsonObject> elements = source.getSourceDigest();
-
-		String sourceName = source.getName();
-		sourceName = digestId(sourceName);
-
-		for (JsonObject jsonObject : elements) {
-			discoverMetaclass(sourceName, jsonObject);
-		}
-
+		discoverMetaclass(digestId(source.getName()), source.getSourceDigest());
+		
 		EPackage ePackage = EcoreFactory.eINSTANCE.createEPackage();
 		ePackage.setName(source.getName());
 		ePackage.setNsURI(DEFAULT_NS_URI + source.getName());
@@ -141,7 +134,7 @@ class YamlModelDiscoverer {
 	private void createStructuralFeature(String pairId, JsonElement value, int lowerBound, EClass eClass) {
 		if (pairId == null || value == null || eClass == null)
 			throw new IllegalArgumentException("Argument(s) can't be null");
-	
+
 		EStructuralFeature eStructuralFeature = null;
 
 		// Select either attribute or reference, according to feature type
@@ -165,7 +158,7 @@ class YamlModelDiscoverer {
 		}
 	}
 
-	// Mapping into ECore types 
+	// Mapping into ECore types
 	private EClassifier mapType(String id, JsonElement value) {
 		if (id == null || value == null)
 			throw new IllegalArgumentException("Argument(s) can't be null");
@@ -211,7 +204,7 @@ class YamlModelDiscoverer {
 		return eClasses;
 	}
 
-	// Maps YAML elements to values 
+	// Maps YAML elements to values
 	private static JsonElement wrapYamlObject(Object o) {
 
 		// NULL transformed to JsonNull
@@ -285,7 +278,7 @@ class YamlModelDiscoverer {
 
 		DocumentSource source = new DocumentSource("Discovered");
 
-		source.addJsonDataFromElem(jsonElem);
+		source.setYamlData(jsonElem);
 		EPackage discoveredModel = discoverer.discover(source);
 
 		EList<EClassifier> model = discoveredModel.getEClassifiers();

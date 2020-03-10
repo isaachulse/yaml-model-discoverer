@@ -2,11 +2,11 @@ package com.isaachulse.yamlmodeldiscoverer;
 
 import com.google.gson.JsonElement;
 
-class JsonData {
+class YamlData {
 
 	private JsonElement data;
 
-	public JsonData(JsonElement data) {
+	public YamlData(JsonElement data) {
 		if (data == null)
 			throw new IllegalArgumentException("Data can't be null");
 
@@ -16,4 +16,5 @@ class JsonData {
 	public JsonElement getData() {
 		return data;
 	}
+	
 }

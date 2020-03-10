@@ -1,8 +1,5 @@
 package com.isaachulse.yamlmodeldiscoverer;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.emf.ecore.EPackage;
 
 import com.google.gson.JsonElement;
@@ -13,8 +10,8 @@ class DocumentSource {
 	private String name;
 
 	private EPackage metamodel;
-	
-	private List<JsonData> jsonData;
+
+	private JsonElement yamlData;
 
 	public String getName() {
 		return name;
@@ -29,34 +26,31 @@ class DocumentSource {
 			throw new IllegalArgumentException("Metamodel can't be null");
 		this.metamodel = metamodel;
 	}
-	
-	protected List<JsonData> getJsonData() {
-		return jsonData;
+
+	protected JsonElement getJsonData() {
+		return yamlData;
 	}
 
 	DocumentSource(String name) {
 		this.name = name;
-		this.jsonData = new ArrayList<JsonData>();
 	}
 
-	void addJsonDataFromElem(JsonElement jsonElement) {
-		getJsonData().add(new JsonData(jsonElement));
+	void setJsonDataFromElement(JsonElement jsonElement) {
+		this.yamlData = jsonElement;
 	}
 
-	public List<JsonObject> getSourceDigest() {
-		List<JsonObject> result = new ArrayList<JsonObject>();
+	void setYamlData(JsonElement jsonElement) {
+		this.yamlData = jsonElement;
+	}
 
-		for (JsonData data : this.getJsonData()) {
-			JsonElement outputElement = data.getData();
-			if (outputElement.isJsonArray()) {
-				for (int i = 0; i < outputElement.getAsJsonArray().size(); i++)
-					if (outputElement.getAsJsonArray().get(i).isJsonObject())
-						result.add(outputElement.getAsJsonArray().get(i).getAsJsonObject());
-			} else if (outputElement.isJsonObject()) {
-				result.add(outputElement.getAsJsonObject());
-			}
+	public JsonObject getSourceDigest() {
+		JsonElement outputElement = this.getJsonData();
+
+		if (outputElement.isJsonArray()) {
+			for (int i = 0; i < outputElement.getAsJsonArray().size(); i++)
+				if (outputElement.getAsJsonArray().get(i).isJsonObject())
+					return (JsonObject) outputElement.getAsJsonArray().get(i).getAsJsonObject();
 		}
-
-		return result;
+		return (JsonObject) outputElement.getAsJsonObject();
 	}
 }
