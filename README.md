@@ -5,13 +5,20 @@ _Lightweight utility to generate an ECore metamodel from a YAML file._
 ---
 Usage as follows:
 ```java
+
+String exampleYaml = "Yaml Here";
+
+// Instantiating SnakeYaml parser
+Yaml yaml = new Yaml();
+YamlElement yamlElement = wrapYamlObject(yaml.load(exampleYaml);); 
 YamlModelDiscoverer discoverer = new YamlModelDiscoverer();
 
+// Set DocumentSource (will probably remove)
 DocumentSource source = new DocumentSource("RootElement");
 source.setYamlData("YAML String Here");
 
+// Bam! EPackage with everything in...
 EPackage discoveredModel = discoverer.discover(source);
-
 
 // Find EClassifiers
 EList<EClassifier> eClassifiers = discoveredModel.getEClassifiers();
