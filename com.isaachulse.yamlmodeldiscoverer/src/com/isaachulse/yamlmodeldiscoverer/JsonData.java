@@ -10,7 +10,7 @@ import com.google.gson.JsonObject;
  * This class holds the input (as JSON) and the output (as JSON) of the service
  * given such an input.
  * <p>
- * In the context of JSON discoverer, this class is used in {@link JsonSource}
+ * In the context of JSON discoverer, this class is used in {@link DocumentSource}
  * elements to represent the data for JSON-based Web services.
  */
 class JsonData {

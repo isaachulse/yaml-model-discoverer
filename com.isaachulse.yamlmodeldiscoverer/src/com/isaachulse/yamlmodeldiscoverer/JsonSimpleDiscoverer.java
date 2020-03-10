@@ -1,5 +1,6 @@
 package com.isaachulse.yamlmodeldiscoverer;
 
+import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EDataType;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -33,13 +35,13 @@ import com.google.gson.JsonPrimitive;
  * This class is used to discover/refine metamodels (as {@link EPackage}
  * elements) from JSON documents (i.e., json file).
  * <p>
- * Once created, a metamodel out of a {@link JsonSource} element can be
+ * Once created, a metamodel out of a {@link DocumentSource} element can be
  * discovered by calling the method
- * {@link JsonSimpleDiscoverer#discover(JsonSource)}.
+ * {@link JsonSimpleDiscoverer#discover(DocumentSource)}.
  * <p>
  * To refine a metamodel, you have to call to
- * {@link JsonSimpleDiscoverer#refine(EPackage, JsonSource)} giving the
- * metamodel to refine and a new {@link JsonSource}.
+ * {@link JsonSimpleDiscoverer#refine(EPackage, DocumentSource)} giving the
+ * metamodel to refine and a new {@link DocumentSource}.
  * <p>
  */
 class JsonSimpleDiscoverer {
@@ -73,17 +75,17 @@ class JsonSimpleDiscoverer {
 	/**
 	 * Launches the metamodel discoverer from a JSON document.
 	 * <p>
-	 * The method receives a {@link JsonSource} element, which includes the set of
+	 * The method receives a {@link DocumentSource} element, which includes the set of
 	 * JSON documents to be considered.
 	 * <p>
 	 * The discovered metamodel is returned and also stored in the
-	 * {@link JsonSource} received as param (calling
-	 * {@link JsonSource#setMetamodel(EPackage)}).
+	 * {@link DocumentSource} received as param (calling
+	 * {@link DocumentSource#setMetamodel(EPackage)}).
 	 *
-	 * @param source The {@link JsonSource} including the JSON documents
+	 * @param source The {@link DocumentSource} including the JSON documents
 	 * @return The metamodel (as {@link EPackage})
 	 */
-	EPackage discover(JsonSource source) {
+	EPackage discover(DocumentSource source) {
 		if (source == null)
 			throw new IllegalArgumentException("Source cannot be null");
 		else if (source.getJsonData().size() == 0)
@@ -94,7 +96,7 @@ class JsonSimpleDiscoverer {
 
 		LOGGER.fine("[discoverMetamodel] Received " + elements.size() + " json objects to discover");
 
-		String sourceName = (source.includesInput()) ? source.getName() + "Input" : source.getName();
+		String sourceName = source.getName();
 		sourceName = digestId(sourceName);
 
 		for (JsonObject jsonObject : elements) {
@@ -116,7 +118,7 @@ class JsonSimpleDiscoverer {
 	}
 
 	/**
-	 * Discover a metaclass for a {@link JsonSource}
+	 * Discover a metaclass for a {@link DocumentSource}
 	 *
 	 * @param id         Unique identifier for the {@link JsonObject}
 	 * @param jsonObject the {@link JsonObject}
@@ -329,7 +331,7 @@ class JsonSimpleDiscoverer {
 		return eClasses;
 	}
 
-	private static JsonElement wrapSnakeObject(Object o) {
+	private static JsonElement wrapYamlObject(Object o) {
 
 		// NULL => JsonNull
 		if (o == null)
@@ -339,7 +341,7 @@ class JsonSimpleDiscoverer {
 		if (o instanceof Collection) {
 			JsonArray array = new JsonArray();
 			for (Object childObj : (Collection<?>) o)
-				array.add(wrapSnakeObject(childObj));
+				array.add(wrapYamlObject(childObj));
 			return array;
 		}
 
@@ -349,7 +351,7 @@ class JsonSimpleDiscoverer {
 
 			int length = Array.getLength(array);
 			for (int i = 0; i < length; i++)
-				array.add(wrapSnakeObject(Array.get(array, i)));
+				array.add(wrapYamlObject(Array.get(array, i)));
 
 			return array;
 		}
@@ -362,7 +364,7 @@ class JsonSimpleDiscoverer {
 			for (final Map.Entry<?, ?> entry : map.entrySet()) {
 				final String name = String.valueOf(entry.getKey());
 				final Object value = entry.getValue();
-				jsonObject.add(name, wrapSnakeObject(value));
+				jsonObject.add(name, wrapYamlObject(value));
 			}
 
 			return jsonObject;
@@ -384,8 +386,37 @@ class JsonSimpleDiscoverer {
 
 	public static void main(String[] args) {
 
-		String yamlCode = "---\n" + "employee:\n" + "  name: sonoo\n" + "  salary: 56000\n" + "  married: true\n" + "\n"
-				+ "";
+//		String yamlCode = "---\n" + "employee:\n" + "  name: sonoo\n" + "  salary: 56000\n" + "  married: true\n" + "\n"+ "";
+		
+		String yamlCode = "\n" + 
+				"invoice: 34843\n" + 
+				"date   : 2001-01-23\n" + 
+				"bill-to: &id001\n" + 
+				"    given  : Chris\n" + 
+				"    family : Dumars\n" + 
+				"    address:\n" + 
+				"        lines: |\n" + 
+				"            458 Walkman Dr.\n" + 
+				"            Suite #292\n" + 
+				"        city    : Royal Oak\n" + 
+				"        state   : MI\n" + 
+				"        postal  : 48046\n" + 
+				"ship-to: *id001\n" + 
+				"product:\n" + 
+				"    - sku         : BL394D\n" + 
+				"      quantity    : 4\n" + 
+				"      description : Basketball\n" + 
+				"      price       : 450.00\n" + 
+				"    - sku         : BL4438H\n" + 
+				"      quantity    : 1\n" + 
+				"      description : Super Hoop\n" + 
+				"      price       : 2392.00\n" + 
+				"tax  : 251.42\n" + 
+				"total: 4443.52\n" + 
+				"comments: >\n" + 
+				"    Late afternoon is best.\n" + 
+				"    Backup contact is Nancy\n" + 
+				"    Billsmer @ 338-4338.";
 
 //		String jsonCode = "{  \n" +
 //				"    \"employee\": {  \n" +
@@ -397,11 +428,11 @@ class JsonSimpleDiscoverer {
 //
 		Yaml yaml = new Yaml();
 		Map<String, Object> yamlMap = yaml.load(yamlCode);
-		JsonElement jsonElem = wrapSnakeObject(yamlMap);
-
+		JsonElement jsonElem = wrapYamlObject(yamlMap);
+		
 		JsonSimpleDiscoverer discoverer = new JsonSimpleDiscoverer();
-
-		JsonSource source = new JsonSource("Discovered");
+		
+		DocumentSource source = new DocumentSource("Discovered");
 //		source.addJsonData(null, new StringReader(jsonCode));
 
 		source.addJsonDataFromElem(jsonElem);
