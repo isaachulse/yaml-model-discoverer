@@ -46,10 +46,6 @@ public abstract class YamlElement {
 		throw new IllegalStateException("Not a YAML Null: " + this);
 	}
 
-	Boolean getAsBooleanWrapper() {
-		throw new UnsupportedOperationException(getClass().getSimpleName());
-	}
-
 	public boolean getAsBoolean() {
 		throw new UnsupportedOperationException(getClass().getSimpleName());
 	}

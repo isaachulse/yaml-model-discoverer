@@ -2,8 +2,8 @@ package com.isaachulse.yamlmodeldiscoverer;
 
 import org.eclipse.emf.ecore.EPackage;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.isaachulse.yamlmodeldiscoverer.model.YamlElement;
+import com.isaachulse.yamlmodeldiscoverer.model.YamlObject;
 
 class DocumentSource {
 
@@ -11,7 +11,7 @@ class DocumentSource {
 
 	private EPackage metamodel;
 
-	private JsonElement yamlData;
+	private YamlElement yamlData;
 
 	public String getName() {
 		return name;
@@ -27,7 +27,7 @@ class DocumentSource {
 		this.metamodel = metamodel;
 	}
 
-	protected JsonElement getJsonData() {
+	private YamlElement getYamlData() {
 		return yamlData;
 	}
 
@@ -35,22 +35,18 @@ class DocumentSource {
 		this.name = name;
 	}
 
-	void setJsonDataFromElement(JsonElement jsonElement) {
-		this.yamlData = jsonElement;
+	void setYamlData(YamlElement yamlElement) {
+		this.yamlData = yamlElement;
 	}
 
-	void setYamlData(JsonElement jsonElement) {
-		this.yamlData = jsonElement;
-	}
+	public YamlObject getSourceDigest() {
+		YamlElement outputElement = this.getYamlData();
 
-	public JsonObject getSourceDigest() {
-		JsonElement outputElement = this.getJsonData();
-
-		if (outputElement.isJsonArray()) {
-			for (int i = 0; i < outputElement.getAsJsonArray().size(); i++)
-				if (outputElement.getAsJsonArray().get(i).isJsonObject())
-					return (JsonObject) outputElement.getAsJsonArray().get(i).getAsJsonObject();
+		if (outputElement.isYamlArray()) {
+			for (int i = 0; i < outputElement.getAsYamlArray().size(); i++)
+				if (outputElement.getAsYamlArray().get(i).isYamlObject())
+					return outputElement.getAsYamlArray().get(i).getAsYamlObject();
 		}
-		return (JsonObject) outputElement.getAsJsonObject();
+		return outputElement.getAsYamlObject();
 	}
 }

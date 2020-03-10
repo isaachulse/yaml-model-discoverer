@@ -18,11 +18,12 @@ import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
 import org.yaml.snakeyaml.Yaml;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+
+import com.isaachulse.yamlmodeldiscoverer.model.YamlArray;
+import com.isaachulse.yamlmodeldiscoverer.model.YamlElement;
+import com.isaachulse.yamlmodeldiscoverer.model.YamlNull;
+import com.isaachulse.yamlmodeldiscoverer.model.YamlObject;
+import com.isaachulse.yamlmodeldiscoverer.model.YamlPrimitive;
 
 class YamlModelDiscoverer {
 
@@ -39,7 +40,7 @@ class YamlModelDiscoverer {
 			throw new IllegalArgumentException("Source can't be null");
 
 		discoverMetaclass(digestId(source.getName()), source.getSourceDigest());
-		
+
 		EPackage ePackage = EcoreFactory.eINSTANCE.createEPackage();
 		ePackage.setName(source.getName());
 		ePackage.setNsURI(DEFAULT_NS_URI + source.getName());
@@ -50,52 +51,52 @@ class YamlModelDiscoverer {
 		return ePackage;
 	}
 
-	private EClass discoverMetaclass(String id, JsonObject jsonObject) {
-		if (id == null || jsonObject == null)
+	private EClass discoverMetaclass(String id, YamlObject yamlObject) {
+		if (id == null || yamlObject == null)
 			throw new IllegalArgumentException("ID or Data can't be null");
 
 		EClass eClass = eClasses.get(id);
 		if (eClass != null) {
-			eClass = refineMetaclass(eClass, jsonObject);
+			eClass = refineMetaclass(eClass, yamlObject);
 		} else {
-			eClass = createMetaclass(id, jsonObject);
+			eClass = createMetaclass(id, yamlObject);
 		}
 		return eClass;
 	}
 
-	private EClass createMetaclass(String id, JsonObject jsonObject) {
+	private EClass createMetaclass(String id, YamlObject yamlObject) {
 		if (id == null)
 			throw new IllegalArgumentException("ID can't be null");
-		if (jsonObject == null)
+		if (yamlObject == null)
 			throw new IllegalArgumentException("Data object can't be null");
 
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		eClass.setName(id);
 		eClasses.put(id, eClass);
 
-		Iterator<Map.Entry<String, JsonElement>> pairs = jsonObject.entrySet().iterator();
+		Iterator<Map.Entry<String, YamlElement>> pairs = yamlObject.entrySet().iterator();
 		while (pairs.hasNext()) {
-			Map.Entry<String, JsonElement> pair = pairs.next();
+			Map.Entry<String, YamlElement> pair = pairs.next();
 
 			String pairId = pair.getKey();
-			JsonElement value = pair.getValue();
+			YamlElement value = pair.getValue();
 
 			createStructuralFeature(pairId, value, 1, eClass);
 		}
 		return eClass;
 	}
-	
+
 	// Refines EAttributes and EReferences of existing eclass
-	private EClass refineMetaclass(EClass eClass, JsonObject jsonObject) {
-		if (eClass == null || jsonObject == null)
+	private EClass refineMetaclass(EClass eClass, YamlObject yamlObject) {
+		if (eClass == null || yamlObject == null)
 			throw new IllegalArgumentException("Argument(s) can't be null");
 
-		Iterator<Map.Entry<String, JsonElement>> pairs = jsonObject.entrySet().iterator();
+		Iterator<Map.Entry<String, YamlElement>> pairs = yamlObject.entrySet().iterator();
 		while (pairs.hasNext()) {
-			Map.Entry<String, JsonElement> pair = pairs.next();
+			Map.Entry<String, YamlElement> pair = pairs.next();
 
 			String pairId = pair.getKey();
-			JsonElement value = pair.getValue();
+			YamlElement value = pair.getValue();
 
 			EStructuralFeature eStructuralFeature = null;
 			if ((eStructuralFeature = eClass.getEStructuralFeature(pairId)) != null) {
@@ -114,7 +115,7 @@ class YamlModelDiscoverer {
 	}
 
 	// Creates a new EStructuralFeature
-	private void createStructuralFeature(String pairId, JsonElement value, int lowerBound, EClass eClass) {
+	private void createStructuralFeature(String pairId, YamlElement value, int lowerBound, EClass eClass) {
 		if (pairId == null || value == null || eClass == null)
 			throw new IllegalArgumentException("Argument(s) can't be null");
 
@@ -129,7 +130,7 @@ class YamlModelDiscoverer {
 			((EReference) eStructuralFeature).setContainment(true);
 		}
 
-		if (value.isJsonArray()) {
+		if (value.isYamlArray()) {
 			eStructuralFeature.setUpperBound(-1);
 		}
 
@@ -142,22 +143,22 @@ class YamlModelDiscoverer {
 	}
 
 	// Mapping into ECore types
-	private EClassifier mapType(String id, JsonElement value) {
+	private EClassifier mapType(String id, YamlElement value) {
 		if (id == null || value == null)
 			throw new IllegalArgumentException("Argument(s) can't be null");
 
-		if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()) {
+		if (value.isYamlPrimitive() && value.getAsYamlPrimitive().isString()) {
 			return EcorePackage.Literals.ESTRING;
-		} else if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isNumber()) {
+		} else if (value.isYamlPrimitive() && value.getAsYamlPrimitive().isNumber()) {
 			return EcorePackage.Literals.EINT;
-		} else if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isBoolean()) {
+		} else if (value.isYamlPrimitive() && value.getAsYamlPrimitive().isBoolean()) {
 			return EcorePackage.Literals.EBOOLEAN;
-		} else if (value.isJsonArray()) {
-			JsonArray arrayValue = value.getAsJsonArray();
+		} else if (value.isYamlArray()) {
+			YamlArray arrayValue = value.getAsYamlArray();
 			if (arrayValue.size() > 0) {
 				EClassifier generalArrayType = mapType(digestId(id), arrayValue.get(0));
 				for (int i = 1; i < arrayValue.size(); i++) {
-					JsonElement arrayElement = arrayValue.get(i);
+					YamlElement arrayElement = arrayValue.get(i);
 					EClassifier arrayType = mapType(digestId(id), arrayElement);
 					if (generalArrayType != arrayType) {
 						return EcorePackage.Literals.ESTRING;
@@ -165,8 +166,8 @@ class YamlModelDiscoverer {
 				}
 				return generalArrayType;
 			}
-		} else if (value.isJsonObject()) {
-			return discoverMetaclass(digestId(id), value.getAsJsonObject());
+		} else if (value.isYamlObject()) {
+			return discoverMetaclass(digestId(id), value.getAsYamlObject());
 		}
 		return EcorePackage.Literals.ESTRING;
 	}
@@ -189,23 +190,23 @@ class YamlModelDiscoverer {
 	}
 
 	// Maps YAML elements to values
-	private static JsonElement wrapYamlObject(Object o) {
+	private static YamlElement wrapYamlObject(Object o) {
 
-		// NULL transformed to JsonNull
+		// NULL transformed to YamlNull
 		if (o == null)
-			return JsonNull.INSTANCE;
+			return YamlNull.INSTANCE;
 
-		// Collection transformed to JsonArray
+		// Collection transformed to YamlArray
 		if (o instanceof Collection) {
-			JsonArray array = new JsonArray();
+			YamlArray array = new YamlArray();
 			for (Object child : (Collection<?>) o)
 				array.add(wrapYamlObject(child));
 			return array;
 		}
 
-		// Array transformed to JsonArray
+		// Array transformed to YamlArray
 		if (o.getClass().isArray()) {
-			JsonArray array = new JsonArray();
+			YamlArray array = new YamlArray();
 
 			int length = Array.getLength(array);
 			for (int i = 0; i < length; i++)
@@ -214,34 +215,35 @@ class YamlModelDiscoverer {
 			return array;
 		}
 
-		// Map transformed to JsonObject
+		// Map transformed to YamlObject
 		if (o instanceof Map) {
 			Map<?, ?> map = (Map<?, ?>) o;
 
-			JsonObject jsonObject = new JsonObject();
+			YamlObject yamlObject = new YamlObject();
 			for (final Map.Entry<?, ?> entry : map.entrySet()) {
 				final String name = String.valueOf(entry.getKey());
 				final Object value = entry.getValue();
-				jsonObject.add(name, wrapYamlObject(value));
+				yamlObject.add(name, wrapYamlObject(value));
 			}
 
-			return jsonObject;
+			return yamlObject;
 		}
 
-		// Everything else transformed to JsonPrimitive
+		// Everything else transformed to YamlPrimitive
 		if (o instanceof String)
-			return new JsonPrimitive((String) o);
+			return new YamlPrimitive((String) o);
 		if (o instanceof Number)
-			return new JsonPrimitive((Number) o);
+			return new YamlPrimitive((Number) o);
 		if (o instanceof Character)
-			return new JsonPrimitive((Character) o);
+			return new YamlPrimitive((Character) o);
 		if (o instanceof Boolean)
-			return new JsonPrimitive((Boolean) o);
+			return new YamlPrimitive((Boolean) o);
 
 		// Default to String if we can't find anything else
-		return new JsonPrimitive(String.valueOf(o));
+		return new YamlPrimitive(String.valueOf(o));
 	}
 
+	// Main method to test
 	public static void main(String[] args) {
 
 		String yamlCode = "\n" + "invoice: 34843\n" + "date   : 2001-01-23\n" + "bill-to: &id001\n"
@@ -256,13 +258,13 @@ class YamlModelDiscoverer {
 
 		Yaml yaml = new Yaml();
 		Map<String, Object> yamlMap = yaml.load(yamlCode);
-		JsonElement jsonElem = wrapYamlObject(yamlMap);
+		YamlElement yamlElem = wrapYamlObject(yamlMap);
 
 		YamlModelDiscoverer discoverer = new YamlModelDiscoverer();
 
 		DocumentSource source = new DocumentSource("Discovered");
 
-		source.setYamlData(jsonElem);
+		source.setYamlData(yamlElem);
 		EPackage discoveredModel = discoverer.discover(source);
 
 		EList<EClassifier> model = discoveredModel.getEClassifiers();
@@ -276,6 +278,5 @@ class YamlModelDiscoverer {
 		System.out.println();
 
 		System.out.println("Some structural features are: " + first.getEStructuralFeatures());
-
 	}
 }
