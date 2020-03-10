@@ -2,7 +2,7 @@
 
 _Lightweight utility to generate an ECore metamodel from a YAML file._
 
-*To Do:*
+**To Do:**
 - [x] Add utilities to generate EPackage from YAML
 - [x] Integrete `ResourceImpl` from `simpleresource` 
 - [ ] Add EAttributes with `.eSet()`
